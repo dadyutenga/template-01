@@ -1,39 +1,39 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import type { UserRole } from "@/types/auth";
+import { PageLoader } from "@/components/shared/PageLoader";
 
-interface ProtectedRouteProps {
+export interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: UserRole[];
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  allowedRoles,
+}) => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-  console.log('🛡️ ProtectedRoute check:', { 
-    isAuthenticated, 
-    isLoading, 
-    hasUser: !!user,
-    userEmail: user?.email,
-    currentPath: window.location.pathname 
-  });
-
-  // Show loading state while checking authentication
   if (isLoading) {
-    console.log('⏳ ProtectedRoute: Still loading...');
+    return <PageLoader message="Authenticating session..." />;
+  }
+
+  if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground">Loading...</p>
-      </div>
+      <Navigate
+        to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    console.log('❌ ProtectedRoute: Not authenticated, redirecting to login...');
-    return <Navigate to="/login" replace />;
+  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/403" replace />;
   }
 
-  console.log('✅ ProtectedRoute: Authenticated, rendering protected content...');
-  // Render children if authenticated
   return <>{children}</>;
 };
+
+export default ProtectedRoute;

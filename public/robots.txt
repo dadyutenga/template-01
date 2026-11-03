@@ -1,30 +1,13 @@
-# Sitemap
-Sitemap: https://yourapp.com/sitemap.xml
-
-# Allow all crawlers to access public pages
 User-agent: *
 Allow: /
 Allow: /login
-Allow: /signup
+Allow: /register
 Allow: /forgot-password
+Allow: /reset-password
 
-# Disallow crawling of protected/authenticated routes
 Disallow: /dashboard
-Disallow: /upload
-Disallow: /classes
-Disallow: /files
-Disallow: /friends
+Disallow: /records
+Disallow: /reports
 Disallow: /profile
-Disallow: /trash
-Disallow: /sharing
-Disallow: /notifications
 Disallow: /settings
-Disallow: /storage
-Disallow: /password-reset
-
-# Disallow admin/sensitive areas
 Disallow: /api/
-Disallow: /*.json$
-
-# Crawl delay (optional, adjust as needed)
-Crawl-delay: 1

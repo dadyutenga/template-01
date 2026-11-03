@@ -1,14 +1,17 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import { App } from "./app/App";
 import "./index.css";
 
-// Disable console logs in production for security
+// Suppress non-critical logs in production
 if (import.meta.env.PROD) {
-    console.log = () => { };
-    console.error = () => { };
-    console.debug = () => { };
-    console.warn = () => { };
-    console.info = () => { };
+  console.log = () => {};
+  console.debug = () => {};
+  console.info = () => {};
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+if (!rootElement) {
+  throw new Error("Failed to find the root element.");
+}
+
+createRoot(rootElement).render(<App />);

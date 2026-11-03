@@ -1,84 +1,135 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import authService, { LoginData, AuthResponse, User as AuthUser } from '@/services/authService';
-import { authStorage } from '@/lib/authStorage';
-
-// Use the User type from authService for consistency
-type User = AuthUser;
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { User, UserRole, LoginCredentials, RegisterCredentials } from "@/types/auth";
+import { authStorage } from "@/lib/authStorage";
 
 interface AuthContextType {
   user: User | null;
-  login: (data: LoginData) => Promise<AuthResponse>;
-  logout: () => void;
-  refreshUser: () => Promise<void>;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterCredentials) => Promise<void>;
+  logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
+  switchRole: (role: UserRole) => void;
 }
+
+const DEFAULT_MOCK_USER: User = {
+  id: "usr_demo_1",
+  name: "Alex Morgan",
+  email: "alex.morgan@example.com",
+  role: "admin",
+  avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+  department: "Engineering",
+  createdAt: "2024-01-15T10:00:00.000Z",
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(() => {
-    // Initialize state synchronously from storage (cookies + localStorage)
-    const storedUser = authStorage.getUser();
-    const storedToken = authStorage.getToken();
-
-    if (storedUser && storedToken) {
-      return storedUser;
-    }
-
-    return null;
+    return authStorage.getUser() || DEFAULT_MOCK_USER;
   });
+  const [token, setToken] = useState<string | null>(() => {
+    return authStorage.getToken() || "demo-jwt-token-placeholder";
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Set loading to false after initial render to ensure auth state is stable
   useEffect(() => {
-    setIsLoading(false);
+    // If first time visiting, initialize with demo session for seamless preview
+    if (!authStorage.getToken() && !authStorage.getUser()) {
+      authStorage.setToken("demo-jwt-token-placeholder");
+      authStorage.setUser(DEFAULT_MOCK_USER);
+    }
   }, []);
 
-  const login = async (data: LoginData) => {
-    const response = await authService.login(data);
-
-    if (response.data?.user) {
-      setUser(response.data.user);
-    } else {
-      console.error('❌ No user data in login response');
-    }
-    return response;
-  };
-
-  const logout = async () => {
-    await authService.logout();
-    setUser(null);
-  };
-
-  const refreshUser = async () => {
+  const login = async (credentials: LoginCredentials): Promise<void> => {
+    setIsLoading(true);
     try {
-      const response = await authService.getProfile();
-      const userData = response.data || response;
-      if (userData) {
-        setUser(userData);
-        authStorage.setUser(userData);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
-      // If refresh fails, try to get user from storage
-      const storedUser = authStorage.getUser();
-      if (storedUser) {
-        setUser(storedUser);
-      }
+      // Simulate network latency
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const role: UserRole = credentials.email.includes("admin")
+        ? "admin"
+        : credentials.email.includes("manager")
+          ? "manager"
+          : "user";
+
+      const loggedUser: User = {
+        id: `usr_${Date.now()}`,
+        name: credentials.email.split("@")[0].replace(/[._]/g, " "),
+        email: credentials.email,
+        role,
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${credentials.email}`,
+        createdAt: new Date().toISOString(),
+      };
+
+      const mockToken = `mock-token-${Date.now()}`;
+      authStorage.setToken(mockToken, credentials.rememberMe ?? true);
+      authStorage.setUser(loggedUser);
+
+      setToken(mockToken);
+      setUser(loggedUser);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const register = async (data: RegisterCredentials): Promise<void> => {
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const newUser: User = {
+        id: `usr_${Date.now()}`,
+        name: data.name,
+        email: data.email,
+        role: data.role || "user",
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.email}`,
+        createdAt: new Date().toISOString(),
+      };
+
+      const mockToken = `mock-token-${Date.now()}`;
+      authStorage.setToken(mockToken, true);
+      authStorage.setUser(newUser);
+
+      setToken(mockToken);
+      setUser(newUser);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = (): void => {
+    authStorage.clearAll();
+    setUser(null);
+    setToken(null);
+  };
+
+  const updateUser = (updates: Partial<User>): void => {
+    if (!user) return;
+    const updated = { ...user, ...updates };
+    authStorage.setUser(updated);
+    setUser(updated);
+  };
+
+  const switchRole = (role: UserRole): void => {
+    if (!user) return;
+    updateUser({ role });
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        login,
-        logout,
-        refreshUser,
-        isAuthenticated: !!user,
+        token,
+        isAuthenticated: !!user && !!token,
         isLoading,
+        login,
+        register,
+        logout,
+        updateUser,
+        switchRole,
       }}
     >
       {children}
@@ -86,10 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };

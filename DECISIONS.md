@@ -2,6 +2,8 @@
 
 This document logs significant architectural and design choices, trade-offs, and decisions made during the conversion from the domain-specific codebase into a reusable frontend template.
 
+---
+
 ## Phase 0 & 1: Source Discovery & Classification
 
 ### 1. Source Stack & Domain Assessment
@@ -16,7 +18,7 @@ This document logs significant architectural and design choices, trade-offs, and
 
 ### 3. Routing Architecture & Unified Config Array
 - **Finding**: Original routing used JSX `<Routes>` with eager imports in `src/App.tsx`, requiring manual updates to both sidebar markup and router trees when adding a new page.
-- **Decision**: Migrate to React Router's `createBrowserRouter` driven by a unified navigation/route config array (`src/app/routes.config.ts`), with `React.lazy` code-splitting, custom error elements, and automatic breadcrumb/sidebar generation.
+- **Decision**: Migrate to React Router's `createBrowserRouter` driven by a unified navigation/route config array (`src/app/routes.config.tsx`), with `React.lazy` code-splitting, custom error elements, and automatic breadcrumb/sidebar generation.
 - **Reason**: Meets the core requirement: adding a new page requires only creating a page file and adding a single entry to the config array.
 
 ### 4. Pruning Domain Services and Hardware Integrations
@@ -28,3 +30,52 @@ This document logs significant architectural and design choices, trade-offs, and
 - **Finding**: Proprietary assets (logos, marketing kits under `public/Kibegi Design System`, educational photos) and redundant lockfiles (`bun.lockb`, `pnpm-lock.yaml`) were cluttering the repo.
 - **Decision**: Remove proprietary assets and redundant lockfiles. Standardize on `npm` (`package-lock.json`), and replace branding with neutral "Frontend Template" / "Your App" placeholders and clean geometric SVGs.
 - **Reason**: Ensures the template is lightweight, domain-neutral, free of proprietary branding, and has a single source of truth for dependencies.
+
+---
+
+## Phase 2 & 3: Modernization & Template Construction
+
+### 6. Directory Layout & Structure
+- **Decision**: Adopted the target folder structure:
+  - `src/app/` (providers, router, routes.config, App root)
+  - `src/components/ui/` (Radix UI primitives)
+  - `src/components/shared/` (DataTable, StatCard, ChartCard, ActivityFeed, ConfirmDialog, etc.)
+  - `src/components/layout/` (DashboardLayout, AuthLayout, Breadcrumbs, Footer)
+  - `src/features/` (feature slices, e.g. `example-crud` with `CrudForm` and TanStack Query hooks)
+  - `src/hooks/` (reusable hooks)
+  - `src/lib/` (Axios API client, auth storage, translations, formatters)
+  - `src/pages/` (clean page views)
+  - `src/types/` (domain-neutral TypeScript contracts)
+  - `src/test/` (Vitest suites)
+- **Reason**: Highly scalable enterprise folder layout that separates concerns clearly and makes finding code intuitive.
+
+### 7. Rich Component Suite vs. Minimal Skeleton
+- **Decision**: Included a comprehensive library of UI components:
+  - Primitives: `Button`, `IconButton`, `Input`, `PasswordInput`, `Select`, `MultiSelect`, `Textarea`, `Checkbox`, `RadioGroup`, `Switch`, `DatePicker`, `DateRangePicker`, `FileUpload`, `Badge`, `Avatar`, `Tooltip`, `DropdownMenu`, `Tabs`, `Accordion`, `Modal`, `Drawer`, `Popover`, `Spinner`, `Progress`, `EmptyState`, `Alert`, `Pagination`, `Breadcrumbs`, `Stepper`.
+  - Data & Visualization: `DataTable` (sort, filter, search, paginate, select, column toggle, export CSV), `StatCard`, `ChartCard`, Recharts wrappers (`AreaChartWrapper`, `BarChartWrapper`, `LineChartWrapper`, `PieChartWrapper`), `ActivityFeed`, `KpiTrend`.
+  - Feedback & Misc: `ConfirmDialog`, `ErrorBoundary`, `PageLoader`, `CommandPalette` (`Cmd+K`), `ThemeToggle`, `UserMenu`, `NotificationBell`, `PrintableDocument`, `CopyButton`.
+- **Reason**: Provides a complete building kit so new pages can be assembled in minutes without installing external packages.
+
+### 8. Authentication Scaffold & Role Switching
+- **Decision**: Built a complete `AuthContext` with mock authentication, persistence via `localStorage`, and an interactive role switcher in the user menu.
+- **Reason**: Allows immediate testing of role-based route guards (`admin`, `manager`, `user`) without requiring a real backend during development.
+
+---
+
+## Phase 4: Domain Scrubbing
+
+### 9. Removal of All Domain References
+- **Decision**: Renamed package to `frontend-template`. Replaced all domain terms (student, lecturer, classmate, timetable, schoolbag, campus, kibegi) with neutral terminology (Records, Entries, Items, Accounts).
+- **Intentional Leftovers**: No domain words remain in the runtime codebase, metadata, index.html, manifests, or tests. The only historical occurrences exist in `ANALYSIS.md` and `MIGRATION_NOTES.md` to document the migration audit.
+
+---
+
+## Phase 5: Quality, Testing, and Deployment
+
+### 10. Vitest Testing Stack
+- **Decision**: Configured Vitest 2.1 with React Testing Library, Jest DOM matchers, and JSDOM environment. Added unit tests for `DataTable`, `Modal`, `CrudForm`, and `ProtectedRoute`.
+- **Reason**: Vitest integrates natively with Vite's module graph, executing tests with extreme speed while maintaining full Jest API compatibility.
+
+### 11. Multi-Stage Containerization & CI
+- **Decision**: Added a multi-stage `Dockerfile` using `node:20-alpine` for building and `nginx:alpine` with SPA routing and gzip compression for runtime, along with a GitHub Actions CI workflow.
+- **Reason**: Guarantees reproducible, immutable builds ready for any cloud container service (Docker, Kubernetes, AWS ECS, GCP Cloud Run).

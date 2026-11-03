@@ -1,18 +1,17 @@
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import { APP_CONFIG } from "@/lib/constants";
 
-const NavigationIndicator = () => {
+export const NavigationIndicator = () => {
   const location = useLocation();
   const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    // Show loading indicator when route changes
     setIsNavigating(true);
-
-    // Hide after a short delay (smooth transition)
     const timer = setTimeout(() => {
       setIsNavigating(false);
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);
@@ -20,38 +19,22 @@ const NavigationIndicator = () => {
   if (!isNavigating) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <div className="flex flex-col items-center gap-4">
-        <img 
-          src="/favicon/favicon.svg" 
-          alt="Kibegi" 
-          className="h-16 w-16 animate-pulse"
-        />
-        <div className="h-1 w-32 bg-primary/20 rounded-full overflow-hidden">
-          <div className="h-full bg-primary animate-[loading_1s_ease-in-out_infinite] rounded-full" 
-               style={{
-                 width: '60%',
-                 animation: 'loading 1s ease-in-out infinite'
-               }}
-          />
+    <div
+      role="status"
+      aria-label="Loading page navigation"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/60 backdrop-blur-sm transition-opacity"
+    >
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-lg animate-pulse">
+          T
         </div>
+        <Spinner size="md" />
+        <span className="text-xs font-medium text-muted-foreground">
+          Loading {APP_CONFIG.name}...
+        </span>
       </div>
-      <style>{`
-        @keyframes loading {
-          0% {
-            transform: translateX(-100%);
-          }
-          50% {
-            transform: translateX(0%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
     </div>
   );
 };
 
 export default NavigationIndicator;
-
