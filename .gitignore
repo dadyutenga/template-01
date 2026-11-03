@@ -36,3 +36,6 @@ lighthouse-report/
 
 # Build artifacts
 *.tsbuildinfo
+
+# Local backup environment files
+.env.backup
