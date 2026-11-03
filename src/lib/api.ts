@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { authStorage } from './authStorage';
 
 const api = axios.create({
@@ -62,27 +62,14 @@ api.interceptors.request.use(
       // Setting it manually breaks mobile uploads
 
       // Replace headers object completely
-      (config.headers as any) = newHeaders;
+      config.headers = AxiosHeaders.from(newHeaders);
 
       // Don't modify transformRequest - let axios handle FormData natively
     }
 
-    // Debug logging
-    console.log('🔵 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
-      headers: config.headers,
-      data: config.data instanceof FormData ? 'FormData' : config.data,
-      params: config.params,
-      isPublicEndpoint
-    });
-
     return config;
   },
   (error) => {
-    console.error('🔴 Request Error:', error);
     return Promise.reject(error);
   }
 );
@@ -90,27 +77,9 @@ api.interceptors.request.use(
 // Handle response errors
 api.interceptors.response.use(
   (response) => {
-    console.log('🟢 API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.config.url,
-      data: response.data,
-      headers: response.headers
-    });
     return response;
   },
   async (error) => {
-    console.error('🔴 API Error:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      data: error.response?.data,
-      requestData: error.config?.data,
-      code: error.code,
-      name: error.name
-    });
-
     // Don't redirect to login for 401 on public endpoints (like resend-otp, refresh token)
     const isPublicEndpoint = error.config?.url?.includes('/register/') ||
       error.config?.url?.includes('/login/') ||
@@ -127,7 +96,6 @@ api.interceptors.response.use(
         error.config._retry = true; // Prevent infinite retry loop
 
         try {
-          console.log('🔄 Access token expired, attempting to refresh...');
 
           // Import authService dynamically to avoid circular dependency
           const { default: authService } = await import('@/services/authService');
@@ -136,12 +104,10 @@ api.interceptors.response.use(
           // Update the failed request with new token
           error.config.headers.Authorization = `Bearer ${access}`;
 
-          console.log('✅ Token refreshed, retrying original request...');
-
           // Retry the original request with new token
           return api(error.config);
         } catch (refreshError) {
-          console.error('🔴 Token refresh failed, logging out...', refreshError);
+
           authStorage.clearAll();
           localStorage.removeItem('remember_me');
           window.location.href = '/login';
@@ -149,7 +115,7 @@ api.interceptors.response.use(
         }
       } else {
         // "Remember Me" not enabled or no refresh token - log out
-        console.log('ℹ️ Remember me disabled or no refresh token, logging out...');
+
         authStorage.clearAll();
         localStorage.removeItem('remember_me');
         window.location.href = '/login';

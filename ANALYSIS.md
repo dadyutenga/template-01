@@ -304,3 +304,7 @@ Every source file is listed individually. KEEP means a reusable candidate requir
 This audit is incomplete: individual file behavior, full vocabulary, dependency reachability, secrets, and actual dead code must be reviewed before the classification is executed.
 
 A subsequent partial lint cleanup ignores generated `dev-dist` output and resolves two redundant interfaces, a constant declaration and a Tailwind import. A fresh install, development-server HTTP check and production build succeeded; lint still reports 174 errors and 22 warnings. This does not satisfy the phase gate.
+
+A direct TypeScript check also fails before checking the source because `ignoreDeprecations: "6.0"` is not recognized by the installed TypeScript 5.8 compiler. Overriding that setting reveals existing source errors, including missing translation keys and unresolved names. Vite's successful build transpiles without performing this check.
+
+The existing API interceptor logged request headers and request/response bodies in development, and the authentication service logged authentication responses. Initial logging cleanup removes those exposures, but the rest of the application has not yet received a complete sensitive-data logging or credential audit.

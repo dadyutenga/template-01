@@ -44,7 +44,7 @@ interface ApiResponse<T> {
   data: T;
 }
 
-const unwrapData = <T>(payload: any): T => {
+const unwrapData = <T>(payload: unknown): T => {
   if (payload && typeof payload === 'object' && 'data' in payload && payload.data !== undefined) {
     return payload.data as T;
   }

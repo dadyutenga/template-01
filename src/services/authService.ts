@@ -80,52 +80,52 @@ class AuthService {
       hasConfirmPassword: !!data.confirm_password,
       passwordsMatch: data.password === data.confirm_password
     }); // Debug log
-    
+
     const response = await api.post('/v1/auth/register/', data);
-    console.log('Registration response:', response.data); // Debug log
+
     return response.data;
   }
 
   // Verify registration OTP
   async verifyRegistration(data: VerifyOTPData): Promise<AuthResponse> {
     const response = await api.post('/v1/auth/register/verify/', data);
-    
+
     // Store tokens and user data
     if (response.data.data) {
       const responseData = response.data.data;
       const accessToken = responseData?.tokens?.access || responseData?.access;
       const refreshToken = responseData?.tokens?.refresh || responseData?.refresh;
       const user = normalizeAuthUser(responseData?.user);
-      
+
       if (accessToken && refreshToken && user) {
         authStorage.setToken(accessToken);
         authStorage.setRefreshToken(refreshToken);
         authStorage.setUser(user);
       }
     }
-    
+
     return response.data;
   }
 
   // Resend registration OTP
   async resendRegistrationOTP(email: string) {
     console.log('🔵 AuthService.resendRegistrationOTP - Sending request:', { email });
-    
+
     // Validate email
     if (!email || !email.trim()) {
       throw new Error('Email is required');
     }
-    
+
     try {
       const requestBody = { email: email.trim() };
-      console.log('🔵 AuthService.resendRegistrationOTP - Request body:', requestBody);
+
       console.log('🔵 AuthService.resendRegistrationOTP - Endpoint: /v1/auth/register/resend/');
       console.log('🔵 AuthService.resendRegistrationOTP - Base URL:', api.defaults.baseURL);
       console.log('🔵 AuthService.resendRegistrationOTP - Full URL:', `${api.defaults.baseURL}/v1/auth/register/resend/`);
-      
+
       console.log('🔵 AuthService.resendRegistrationOTP - Starting request...');
       console.log('🔵 AuthService.resendRegistrationOTP - Request timestamp:', new Date().toISOString());
-      
+
       // Add a watchdog to detect if request hangs
       const requestStartTime = Date.now();
       const watchdog = setInterval(() => {
@@ -134,7 +134,7 @@ class AuthService {
           console.warn(`⏱️ Request still pending after ${elapsed}ms...`);
         }
       }, 1000);
-      
+
       let response;
       try {
         response = await api.post('/v1/auth/register/resend/', requestBody, {
@@ -151,10 +151,10 @@ class AuthService {
           hasResponse: !!axiosError.response,
           status: axiosError.response?.status
         });
-        
+
         // If axios fails with timeout or network error, try fetch as fallback
-        if (axiosError.code === 'ECONNABORTED' || 
-            axiosError.code === 'ERR_NETWORK' || 
+        if (axiosError.code === 'ECONNABORTED' ||
+            axiosError.code === 'ERR_NETWORK' ||
             axiosError.message?.includes('timeout') ||
             !axiosError.response) {
           console.log('⚠️ Axios failed, trying fetch fallback...');
@@ -169,17 +169,13 @@ class AuthService {
           throw axiosError;
         }
       }
-      
+
       console.log('🟢 AuthService.resendRegistrationOTP - Request completed!');
-      
+
       console.log('🟢 AuthService.resendRegistrationOTP - Response received!');
       console.log('🟢 AuthService.resendRegistrationOTP - Response status:', response.status);
       console.log('🟢 AuthService.resendRegistrationOTP - Response statusText:', response.statusText);
-      console.log('🟢 AuthService.resendRegistrationOTP - Response data:', response.data);
-      console.log('🟢 AuthService.resendRegistrationOTP - Response data type:', typeof response.data);
-      console.log('🟢 AuthService.resendRegistrationOTP - Response data keys:', response.data ? Object.keys(response.data) : 'null');
-      console.log('🟢 AuthService.resendRegistrationOTP - Full response object:', response);
-      
+
       // Handle different response formats
       if (response.data) {
         // If response has message field, return it
@@ -193,23 +189,13 @@ class AuthService {
         // Return as is
         return response.data;
       }
-      
+
       return { message: 'OTP resent successfully. Please check your email.' };
     } catch (error: any) {
-      console.error('🔴 AuthService.resendRegistrationOTP - Error:', error);
-      console.error('🔴 Error response:', error.response);
-      console.error('🔴 Error response data:', error.response?.data);
-      console.error('🔴 Error status:', error.response?.status);
+
       console.error('🔴 Error message:', error.message);
       console.error('🔴 Error code:', error.code);
-      console.error('🔴 Error config:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        baseURL: error.config?.baseURL,
-        headers: error.config?.headers,
-        data: error.config?.data
-      });
-      
+
       // Re-throw with enhanced error information
       throw error;
     }
@@ -219,54 +205,38 @@ class AuthService {
   async login(data: LoginData): Promise<AuthResponse> {
     console.log('AuthService.login called with:', { email: data.email }); // Debug log
     console.log('API URL:', api.defaults.baseURL); // Debug log
-    
+
     const response = await api.post('/v1/auth/login/', data);
-    
-    console.log('Login response:', response.data); // Debug log
-    
+
     // API returns: { message, data: { user, tokens: { access, refresh } } }
     const responseData = response.data.data;
     const user = normalizeAuthUser(responseData?.user);
     const accessToken = responseData?.tokens?.access || responseData?.access;
     const refreshToken = responseData?.tokens?.refresh || responseData?.refresh;
-    
-    console.log('Extracted tokens:', { 
-      hasAccess: !!accessToken, 
-      hasRefresh: !!refreshToken, 
-      hasUser: !!user,
-      accessPreview: accessToken?.substring(0, 20) + '...',
-    }); // Debug log
-    
+
     if (accessToken && refreshToken && user) {
       console.log('💾 Storing tokens and user...', { user: user.email }); // Debug log
       authStorage.setToken(accessToken);
       authStorage.setRefreshToken(refreshToken);
       authStorage.setUser(user);
-      
+
       // Verify storage immediately
       const verifyToken = authStorage.getToken();
       const verifyUser = authStorage.getUser();
-      console.log('✅ Storage verification:', { 
-        tokenStored: !!verifyToken, 
+      console.log('✅ Storage verification:', {
+        tokenStored: !!verifyToken,
         userStored: !!verifyUser,
-        userEmail: verifyUser?.email 
-      });
-    } else {
-      console.error('❌ Missing tokens or user data in response:', { 
-        hasAccess: !!accessToken, 
-        hasRefresh: !!refreshToken, 
-        hasUser: !!user,
-        responseStructure: Object.keys(responseData || {})
+        userEmail: verifyUser?.email
       });
     }
-    
+
     return response.data;
   }
 
   // Logout
   async logout() {
     const refreshToken = authStorage.getRefreshToken();
-    
+
     try {
       if (refreshToken) {
         await api.post('/v1/auth/logout/', { refresh: refreshToken });
@@ -280,26 +250,26 @@ class AuthService {
   // Get user profile
   async getProfile() {
     const response = await api.get('/v1/auth/profile/');
-    
+
     // Update stored user data
     if (response.data.data) {
       response.data.data = normalizeAuthUser(response.data.data);
       authStorage.setUser(response.data.data);
     }
-    
+
     return response.data;
   }
 
   // Update user profile
   async updateProfile(data: UpdateProfileData) {
     const response = await api.patch('/v1/auth/profile/', data);
-    
+
     // Update stored user data - API returns: { message, data: { ... } }
     if (response.data.data) {
       response.data.data = normalizeAuthUser(response.data.data);
       authStorage.setUser(response.data.data);
     }
-    
+
     return response.data;
   }
 
@@ -370,25 +340,25 @@ class AuthService {
   // API: POST /api/v1/auth/password-reset-confirm/
   // Request body: { token: string, new_password: string, confirm_password: string }
   async confirmPasswordReset(data: PasswordResetConfirmData) {
-    console.log('🔵 AuthService.confirmPasswordReset - Request:', { 
+    console.log('🔵 AuthService.confirmPasswordReset - Request:', {
       hasToken: !!data.token,
       tokenLength: data.token?.length,
       hasNewPassword: !!data.new_password,
       hasConfirmPassword: !!data.confirm_password
     });
-    
+
     // Validate required fields - API requires: token, new_password, confirm_password (NO email)
     if (!data.token || !data.new_password || !data.confirm_password) {
       throw new Error('All fields (token, new_password, confirm_password) are required');
     }
-    
+
     // Build request body - API expects ONLY: token, new_password, confirm_password
     const requestBody = {
       token: data.token.trim(),
       new_password: data.new_password,
       confirm_password: data.confirm_password,
     };
-    
+
     console.log('🔵 AuthService.confirmPasswordReset - Request body:', {
       hasToken: !!requestBody.token,
       tokenLength: requestBody.token.length,
@@ -398,28 +368,26 @@ class AuthService {
       confirmPasswordLength: requestBody.confirm_password.length,
       allFields: Object.keys(requestBody)
     });
-    
-    try {
-      // Based on URL pattern: path('password-reset-confirm/', ...) 
+
+      // Based on URL pattern: path('password-reset-confirm/', ...)
       // The endpoint is /v1/auth/password-reset-confirm/
       // Request body: { token, new_password, confirm_password }
       console.log('🔵 Attempting password reset confirm at: /v1/auth/password-reset-confirm/');
-      
+
       const response = await api.post('/v1/auth/password-reset-confirm/', requestBody, {
         validateStatus: (status) => {
           // Don't throw error for any status, let us handle it
           return status >= 200 && status < 600;
         }
       });
-      
+
       console.log('🟢 AuthService.confirmPasswordReset - Response status:', response.status);
-      console.log('🟢 AuthService.confirmPasswordReset - Response data:', response.data);
-      
+
       // Check if response indicates an error
       if (response.status >= 400) {
         const errorData = response.data;
         let errorMessage = 'Failed to reset password';
-        
+
         if (errorData) {
           if (typeof errorData === 'string') {
             errorMessage = errorData;
@@ -443,34 +411,21 @@ class AuthService {
             }
           }
         }
-        
+
         console.error('🔴 Password reset confirm returned error status:', {
           status: response.status,
           errorMessage,
           errorData
         });
-        
+
         const error = new Error(errorMessage);
         (error as any).response = { data: errorData, status: response.status, statusText: response.statusText };
         (error as any).status = response.status;
         throw error;
       }
-      
+
       console.log('✅ Password reset confirm successful!');
       return response.data;
-    } catch (error: any) {
-      console.error('🔴 Password reset confirm error:', error);
-      console.error('🔴 Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        url: error.config?.url,
-        requestData: error.config?.data
-      });
-      
-      throw error;
-    }
   }
 
   // Resend password reset OTP
@@ -478,7 +433,7 @@ class AuthService {
   async resendPasswordResetOTP(email: string) {
     console.log('🔵 AuthService.resendPasswordResetOTP - Sending request:', { email });
     const response = await api.post('/v1/auth/password-reset/resend/', { email });
-    console.log('🟢 AuthService.resendPasswordResetOTP - Response:', response.data);
+
     return response.data;
   }
 
@@ -489,24 +444,22 @@ class AuthService {
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
-    
+
     try {
       console.log('🔵 AuthService - Refreshing token...');
-      
+
       // API expects: { refresh: "refresh_token_string" }
-      const response = await api.post('/v1/auth/token/refresh/', { 
-        refresh: refreshToken 
+      const response = await api.post('/v1/auth/token/refresh/', {
+        refresh: refreshToken
       });
-      
-      console.log('🟢 AuthService - Token refresh response:', response.data);
-      
+
       const responseData = response.data;
-      
+
       // API returns: { access: "new_access_token", refresh?: "new_refresh_token" }
       // Or wrapped: { success: true, data: { access: "...", refresh?: "..." } }
       let newAccessToken: string | undefined;
       let newRefreshToken: string | undefined;
-      
+
       if (responseData?.data) {
         // Wrapped response
         newAccessToken = responseData.data.access;
@@ -516,27 +469,21 @@ class AuthService {
         newAccessToken = responseData?.access;
         newRefreshToken = responseData?.refresh;
       }
-      
+
       if (!newAccessToken) {
-        console.error('🔴 No access token in refresh response:', responseData);
+
         throw new Error('Invalid token refresh response: no access token');
       }
-      
+
       console.log('✅ AuthService - Updating tokens in storage');
       authStorage.setToken(newAccessToken);
       if (newRefreshToken) {
         authStorage.setRefreshToken(newRefreshToken);
       }
-      
+
       return { access: newAccessToken, refresh: newRefreshToken };
     } catch (error: any) {
-      console.error('🔴 Token refresh failed:', error);
-      console.error('🔴 Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      
+
       // Clear tokens if refresh fails
       authStorage.clearAll();
       throw error;
@@ -584,16 +531,16 @@ function normalizeAuthUser(user: any): User {
 const resendOTPWithFetch = async (email: string) => {
   const baseURL = import.meta.env.VITE_API_URL || 'https://api.kibegi.com/api';
   const url = `${baseURL}/v1/auth/register/resend/`;
-  
+
   console.log('🔵 ResendOTP (Fetch) - Starting request:', { url, email });
-  
+
   // Use AbortController for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     console.log('⏱️ ResendOTP timeout - aborting request');
     controller.abort();
   }, 30000); // 30 seconds
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -605,15 +552,15 @@ const resendOTPWithFetch = async (email: string) => {
       mode: 'cors',
       cache: 'no-cache',
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     console.log('🟢 ResendOTP (Fetch) - Response received:', {
       status: response.status,
       statusText: response.statusText,
       ok: response.ok
     });
-    
+
     if (!response.ok) {
       let errorMessage = `Request failed with status ${response.status}`;
       try {
@@ -623,7 +570,7 @@ const resendOTPWithFetch = async (email: string) => {
         const text = await response.text();
         errorMessage = text || errorMessage;
       }
-      
+
       const error: any = new Error(errorMessage);
       error.response = {
         status: response.status,
@@ -633,11 +580,10 @@ const resendOTPWithFetch = async (email: string) => {
       error.status = response.status;
       throw error;
     }
-    
+
     // Parse successful response
     const data = await response.json();
-    console.log('🟢 ResendOTP (Fetch) - Response data:', data);
-    
+
     // Convert to axios-like response format
     return {
       status: response.status,
@@ -646,13 +592,13 @@ const resendOTPWithFetch = async (email: string) => {
     };
   } catch (error: any) {
     clearTimeout(timeoutId);
-    
+
     if (error.name === 'AbortError') {
       const timeoutError: any = new Error('Request timeout: The server did not respond within 30 seconds');
       timeoutError.code = 'ECONNABORTED';
       throw timeoutError;
     }
-    
+
     throw error;
   }
 };

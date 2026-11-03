@@ -1,4 +1,5 @@
 import Cookies from 'js-cookie';
+import type { User } from '@/services/authService';
 
 const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -93,16 +94,16 @@ export const authStorage = {
   },
 
   // User data management
-  getUser(): any | null {
+  getUser(): User | null {
     try {
       const userStr = Cookies.get(USER_KEY) || localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
-      return userStr ? JSON.parse(userStr) : null;
+      return userStr ? JSON.parse(userStr) as User : null;
     } catch {
       return null;
     }
   },
 
-  setUser(user: any): void {
+  setUser(user: User): void {
     const userStr = JSON.stringify(user);
     const rememberMe = this.getRememberMe();
     const options = rememberMe ? cookieOptions : sessionCookieOptions;
