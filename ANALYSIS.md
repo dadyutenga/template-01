@@ -22,6 +22,48 @@ React 18.3, Vite 5.4, TypeScript 5.8, React Router 6.30, TanStack Query 5, Tailw
 
 The entry point mounts App; App nests query, theme, language, auth and tooltip providers around the router. Protected routes consult auth context. Page components call service modules, which use the Axios client and auth storage. State is mostly local React state and contexts; TanStack Query is configured, but use should be checked per page. Tailwind utilities and CSS variables in `src/index.css` implement styling, with additional design-system CSS under `public`.
 
+## Routes in the original router
+
+The route definitions below were extracted from `src/App.tsx`; access is indicated by its `ProtectedRoute` wrapper.
+
+| Path | Element | Access |
+| --- | --- | --- |
+| `/` | `Index` | Public |
+| `/login` | `Login` | Public |
+| `/signup` | `Signup` | Public |
+| `/forgot-password` | `ForgotPassword` | Public |
+| `/password-reset` | `PasswordResetRequest` | Public |
+| `/about` | `About` | Public |
+| `/how-to-use` | `HowToUse` | Public |
+| `/privacy` | `Privacy` | Public |
+| `/contact` | `Contact` | Public |
+| `/password-reset/verify` | `PasswordResetVerify` | Public |
+| `/password-reset/confirm` | `PasswordResetConfirm` | Public |
+| `/dashboard` | `Dashboard` | Protected |
+| `/upload` | `Upload` | Protected |
+| `/classes` | `Classes` | Protected |
+| `/classes/:id` | `ClassDetails` | Protected |
+| `/schedule` | `Schedule` | Protected |
+| `/schedule/calendar/:calendarId` | `Schedule` | Protected |
+| `/schedule/subscribe/:token` | `SchedulePublicSubscriptionPage` | Public |
+| `/schedule/code` | `ScheduleCodeEntryPage` | Public |
+| `/schedule/code/:code` | `SchedulePublicSubscriptionPage` | Public |
+| `/files` | `Files` | Protected |
+| `/friends` | `Friends` | Protected |
+| `/profile` | `Profile` | Protected |
+| `/profile/edit` | `ProfileEdit` | Protected |
+| `/profile/change-password` | `ProfileChangePassword` | Protected |
+| `/trash` | `Trash` | Protected |
+| `/sharing` | `Sharing` | Protected |
+| `/notifications` | `Notifications` | Protected |
+| `/settings` | `Settings` | Protected |
+| `/storage` | `Storage` | Protected |
+| `/marketplace` | `Marketplace` | Protected |
+| `/library` | `Library` | Protected |
+| `/channel` | `Channel` | Protected |
+| `/channel/register/:token` | `PublicRegister` | Public |
+| `*` | `NotFound` | Public |
+
 ## Dead code and uncertainty
 
 There are multiple lockfiles, generated `dev-dist` files, helper scripts and a static design-system export. Their reachability and dependency use have not yet been established. No item is asserted dead solely because it is not imported by the entry point. The inventory below is a proposed disposition, not proof of unused code.
@@ -256,7 +298,9 @@ Every source file is listed individually. KEEP means a reusable candidate requir
 - `npm install`: completed; npm reported 37 vulnerabilities and deprecated dependencies.
 - `npm run dev`: started and returned HTTP 200 at the local root; Vite emitted browser-data and Tailwind warnings.
 - `npm run build`: completed with outdated browser-data, invalid Tailwind utility, mixed dynamic/static import and large bundle warnings.
-- `npm run lint`: failed with 198 errors and 30 warnings, including 141 explicit-any errors. The initial parallel run also encountered a transient Vite config file race; the reported count is from a subsequent standalone run.
+- `npm run lint`: failed with 198 errors and 30 warnings, including numerous explicit-any errors. The initial parallel run also encountered a transient Vite config file race; the reported count is from a subsequent standalone run.
 - No automated test script is configured.
 
 This audit is incomplete: individual file behavior, full vocabulary, dependency reachability, secrets, and actual dead code must be reviewed before the classification is executed.
+
+A subsequent partial lint cleanup ignores generated `dev-dist` output and resolves two redundant interfaces, a constant declaration and a Tailwind import. A fresh install, development-server HTTP check and production build succeeded; lint still reports 174 errors and 22 warnings. This does not satisfy the phase gate.

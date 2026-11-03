@@ -17,7 +17,7 @@ export const generateICS = (events: CalendarEvent[]): string => {
         return format(date, "yyyyMMdd'T'HHmmss");
     };
 
-    let icsContent = [
+    const icsContent = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
         'PRODID:-//Kalendafy//NONSGML v1.0//EN',
