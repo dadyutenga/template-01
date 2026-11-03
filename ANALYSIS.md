@@ -1,310 +1,234 @@
-# Source audit (preliminary)
+# System Analysis & Architecture Audit
 
-The supplied directory had no `.git` history. The application is an education and file-sharing UI, not the POS application described in the request. This inventory is a preliminary classification based on file roles and entry-point/import inspection; it is not yet a complete line-by-line audit, and deletion decisions need verification before execution.
+## Phase 0: Source Type and Domain Analysis
 
-## Domain vocabulary (initial, not exhaustive)
+### Source Stack Identification
+- **Build Tool & Bundler**: Vite 5.4.19 with `@vitejs/plugin-react-swc` (SWC-based fast React compiler).
+- **Core Framework**: React 18.3.1 with React DOM 18.3.1.
+- **Language**: TypeScript 5.8.3. The original `tsconfig.app.json` had `"strict": false` and `"noImplicitAny": false`, which will be modernized to full TypeScript strict mode (`"strict": true`).
+- **Routing**: React Router DOM 6.30.1 configured using JSX declarative routes (`<BrowserRouter>`, `<Routes>`, `<Route>`) in `src/App.tsx`. Eager loading was used for all pages.
+- **State Management**:
+  - Client state: React Context API (`AuthContext`, `LanguageContext`, `ThemeContext`) combined with component-level `useState`/`useReducer`.
+  - Server state: TanStack React Query (`@tanstack/react-query` 5.83.0), configured in `App.tsx` with default retry/stale parameters.
+  - Storage: `js-cookie` and `localStorage` handled via `src/lib/authStorage.ts`.
+- **Styling Architecture**:
+  - Tailwind CSS 3.4.17 with PostCSS and Autoprefixer.
+  - Design tokens structured via HSL CSS variables in `src/index.css` supporting light and dark modes (`.dark`).
+  - Animation utilities via `tailwindcss-animate` and typography via `@tailwindcss/typography`.
+  - Iconography: `lucide-react` (v0.462.0).
+- **UI & Component Primitives**:
+  - Radix UI unstyled primitives (`@radix-ui/react-*`) mapped to shadcn/ui components (`accordion`, `alert-dialog`, `avatar`, `badge`, `button`, `calendar`, `card`, `dialog`, `dropdown-menu`, `popover`, `select`, `sheet`, `table`, `tabs`, `tooltip`, etc.).
+  - Notification / Toast: `sonner` and Radix `toast`.
+  - Command palette: `cmdk`.
+  - Charts: `recharts` 2.15.4 with responsive containers.
+  - Mobile bottom sheets: `vaul`.
+- **Form Handling & Validation**:
+  - React Hook Form 7.61.1 with `@hookform/resolvers/zod`.
+  - Schema definition and validation: Zod 3.25.76.
+- **Package Manager & Lockfiles**:
+  - Active: `npm` with `package-lock.json` (lockfileVersion 3).
+  - Unused / redundant artifacts: `bun.lockb` and `pnpm-lock.yaml` were present in the source root.
+- **Test Setup**:
+  - No automated test runner, test framework, or test scripts were present in `package.json`.
+  - Ad-hoc manual testing files: `test-auth.html`, `test-upload.sh`, and `public/test-storage.html`.
 
-Education and collaboration terms found in source include: school, student, lecturer, class, classmate, course, study, examination, exam, schedule, calendar, library, resource, upload, file, sharing, friend, channel, marketplace, listing, seller, registration and storage. The original brand is Kibegi. This list still requires a comprehensive text and asset review before scrubbing.
+### Business Domain & Domain Vocabulary List
+- **Business Domain**: Academic and student campus file-sharing, timetable scheduling, peer networking (friends/classmates), campus community channels, and student marketplace platform.
+- **Original Brand**: "Kibegi" / "Kibegi - Your Digital School Bag".
+- **Domain Vocabulary List** (to be completely scrubbed or generalized in Phase 4):
+  - **Brand & Platform**: `kibegi`, `kibegi-ui`, `Digital School Bag`, `kibegi.com`, `api.kibegi.com`.
+  - **Academic / School**: `school`, `university`, `college`, `student`, `lecturer`, `teacher`, `professor`, `class`, `classes`, `classmate`, `classmates`, `course`, `subject`, `study`, `study materials`, `examination`, `exam`, `timetable`, `semester`, `term`.
+  - **Files & Storage**: `upload`, `uploader`, `chunked upload`, `files`, `my files`, `folder`, `sharing`, `shared with me`, `public share`, `storage`, `quota`, `trash`, `recycle bin`, `resource`, `share resource`.
+  - **Social & Community**: `friend`, `friends`, `buddy`, `network`, `channel`, `public register`, `broadcast`.
+  - **Marketplace & Commerce**: `marketplace`, `listing`, `listings`, `seller`, `buyer`, `product`, `item condition`, `price`, `contact seller`.
+  - **Hardware / Specialized integrations**: `qr scanner`, `html5-qrcode`, `qrcode.react`, `ics export`, `ical`, `device token`, `otp verification`.
 
-No test runner or automated test script is configured in `package.json`; standalone HTML and shell test artifacts exist. npm, pnpm and Bun lockfiles are present. No LICENSE file was found.
+---
 
-## Stack and configuration
+## Phase 1: Audit and Classification
 
-React 18.3, Vite 5.4, TypeScript 5.8, React Router 6.30, TanStack Query 5, Tailwind 3.4, Radix/shadcn-style components, Recharts 2, React Hook Form and Zod 3. Flat ESLint configuration exists. The application compiler disables strict checks. Vite config includes branding, a PWA and a domain-specific API cache. `main.tsx` suppresses console methods in production. `App.tsx` eagerly imports pages and uses `BrowserRouter`/`Routes`.
+### Classification Criteria
+- **KEEP**: Components and utilities that are already generic UI primitives (buttons, inputs, dialogs, dropdowns, tables, toasts, loaders, theme switcher) and do not contain business-domain logic.
+- **GENERALIZE**: Structural layouts, data tables, detail views, dashboard cards, auth screens, settings, and forms that provide good layout/UX structure but currently contain hardcoded domain copy, domain types, or domain services. These will be transformed into reusable, prop-driven, neutral components and pages.
+- **DELETE**: Pure domain business logic, domain-specific REST services, domain mocks, hardware/scanner integrations, unused marketing kits, proprietary assets, and domain deployment scripts.
 
-## Folder map and data flow
+### Full Inventory & Classification Table
 
-- `src/pages`: application screens and page-local helpers, enumerated below.
-- `src/components/ui`: reusable Radix-based primitives; `src/components/layout` and other components combine UI and application-specific navigation.
-- `src/contexts`: authentication, language and theme providers; `src/hooks`: toast, mobile breakpoint and page-title hooks.
-- `src/services`: domain API operations; `src/lib`: API, storage, translation and utility helpers.
-- `src/assets` and `public`: application branding, educational imagery, generated PWA and design-system artifacts.
+| Path | Classification | Role / Function | Modernization / Transformation Plan |
+| :--- | :--- | :--- | :--- |
+| `src/App.tsx` | GENERALIZE | Root application router and provider tree | Migrate to `createBrowserRouter`, lazy route loading, and wrap in `AppShell` |
+| `src/main.tsx` | GENERALIZE | Entry point | Connect React 18 `createRoot`, initialize QueryClient, ThemeProvider, LanguageProvider |
+| `src/index.css` | GENERALIZE | Core Tailwind and CSS design tokens | Retain clean HSL color system and radius variables; remove domain fonts/classes |
+| `src/vite-env.d.ts` | KEEP | Vite type definitions | Retain and enhance with typed `ImportMetaEnv` |
+| **Contexts & Providers** | | | |
+| `src/contexts/AuthContext.tsx` | GENERALIZE | Authentication provider and state | Generalize to neutral user mock/session, role-based auth, no domain endpoints |
+| `src/contexts/ThemeContext.tsx` | KEEP | Theme provider (light/dark/system) | Retain with localStorage persistence and system theme detection |
+| `src/contexts/LanguageContext.tsx` | GENERALIZE | i18n context (English + Swahili) | Modernize and standardize with generic application dictionary keys |
+| **Hooks** | | | |
+| `src/hooks/use-mobile.tsx` | KEEP | Responsive mobile breakpoint detector | Keep as `useIsMobile` / `useMediaQuery` |
+| `src/hooks/use-toast.ts` | KEEP | Radix toast hook | Keep for toast feedback integration |
+| `src/hooks/usePageTitle.ts` | GENERALIZE | Document title manager | Generalize with neutral default app title |
+| **Library & Utilities** | | | |
+| `src/lib/api.ts` | GENERALIZE | Axios client instance and interceptors | Create generic API client with base URL from `import.meta.env`, error normalization |
+| `src/lib/authStorage.ts` | GENERALIZE | Token and session persistence | Generalize to neutral auth storage utility (localStorage + fallback) |
+| `src/lib/utils.ts` | KEEP | `cn` (clsx + tailwind-merge) utility | Retain and extend with formatters (date, currency, bytes, number) |
+| `src/lib/translations.ts` | GENERALIZE | Translation strings (EN / SW) | Generalize strings to neutral app terminology (Dashboard, Settings, Records, etc.) |
+| `src/lib/ics.ts` | DELETE | iCalendar (.ics) generation | Delete domain calendar generator |
+| `src/lib/media.ts` | DELETE | Domain media preview helper | Generalize into generic file preview and delete domain endpoints |
+| **Layout Components** | | | |
+| `src/components/layout/Sidebar.tsx` | GENERALIZE | Navigation sidebar | Transform into collapsible AppShell sidebar driven by `routes.config.ts` |
+| `src/components/layout/Navbar.tsx` | GENERALIZE | Header topbar | Generalize to topbar with breadcrumbs, command palette trigger, theme toggle, user menu |
+| `src/components/layout/DashboardNav.tsx` | GENERALIZE | Dashboard navigation wrapper | Consolidate into `DashboardLayout` |
+| `src/components/layout/BottomNav.tsx` | GENERALIZE | Mobile bottom navigation | Include in responsive mobile drawer / bottom navigation |
+| `src/components/layout/InfoLayout.tsx` | GENERALIZE | Public / informational layout | Generalize into clean `AuthLayout` / public shell |
+| `src/components/NavLink.tsx` | KEEP | Active route link wrapper | Keep as navigation helper |
+| `src/components/NavigationIndicator.tsx`| KEEP | Route change progress bar | Retain for route transition feedback |
+| `src/components/ProtectedRoute.tsx` | GENERALIZE | Route authorization guard | Generalize to support role-based permission checks and redirect parameters |
+| `src/components/FilePreview.tsx` | GENERALIZE | File preview modal | Generalize to neutral document/image modal viewer |
+| `src/components/QrScanner.tsx` | DELETE | HTML5 QR camera scanner | Delete domain hardware integration and scanner library |
+| `src/components/library/ShareResourceForm.tsx` | DELETE | Domain resource sharing form | Delete domain form |
+| `src/components/dashboard/DashboardHeader.tsx` | GENERALIZE | Dashboard header bar | Generalize into generic page header with title, description, and action slot |
+| **UI Primitives (`src/components/ui/`)** | | | |
+| `accordion.tsx` | KEEP | Radix accordion | Keep UI primitive |
+| `alert-dialog.tsx` | KEEP | Radix alert dialog | Keep UI primitive; use for `ConfirmDialog` |
+| `alert.tsx` | KEEP | Alert banner primitive | Keep UI primitive |
+| `aspect-ratio.tsx` | KEEP | Aspect ratio container | Keep UI primitive |
+| `avatar.tsx` | KEEP | Avatar with fallback | Keep UI primitive |
+| `badge.tsx` | KEEP | Status badge primitive | Keep UI primitive |
+| `breadcrumb.tsx` | KEEP | Breadcrumb navigation | Keep UI primitive |
+| `button.tsx` | KEEP | Button component with variants | Keep UI primitive; add `IconButton` variant/wrapper |
+| `calendar.tsx` | KEEP | React Day Picker calendar | Keep UI primitive |
+| `card.tsx` | KEEP | Card container | Keep UI primitive |
+| `carousel.tsx` | KEEP | Embla carousel wrapper | Keep UI primitive |
+| `chart.tsx` | KEEP | Recharts styled wrapper | Keep data visualization primitive |
+| `checkbox.tsx` | KEEP | Radix checkbox | Keep UI primitive |
+| `collapsible.tsx` | KEEP | Radix collapsible | Keep UI primitive |
+| `command.tsx` | KEEP | cmdk command dialog | Keep UI primitive for Command Palette |
+| `context-menu.tsx` | KEEP | Context menu | Keep UI primitive |
+| `dialog.tsx` | KEEP | Radix dialog | Keep UI primitive (Modal) |
+| `drawer.tsx` | KEEP | Vaul drawer | Keep UI primitive (Drawer) |
+| `dropdown-menu.tsx` | KEEP | Radix dropdown menu | Keep UI primitive |
+| `form.tsx` | KEEP | React Hook Form wrapper | Keep form primitive |
+| `hover-card.tsx` | KEEP | Hover preview card | Keep UI primitive |
+| `input-otp.tsx` | KEEP | OTP input | Keep UI primitive |
+| `input.tsx` | KEEP | Text input | Keep UI primitive |
+| `label.tsx` | KEEP | Form label | Keep UI primitive |
+| `menubar.tsx` | KEEP | Desktop menubar | Keep UI primitive |
+| `navigation-menu.tsx` | KEEP | Navigation menu | Keep UI primitive |
+| `pagination.tsx` | KEEP | Pagination controls | Keep UI primitive |
+| `popover.tsx` | KEEP | Radix popover | Keep UI primitive |
+| `progress.tsx` | KEEP | Progress bar | Keep UI primitive |
+| `radio-group.tsx` | KEEP | Radio buttons | Keep UI primitive |
+| `resizable.tsx` | KEEP | Resizable panels | Keep UI primitive |
+| `scroll-area.tsx` | KEEP | Custom scrollbar container | Keep UI primitive |
+| `select.tsx` | KEEP | Radix select dropdown | Keep UI primitive |
+| `separator.tsx` | KEEP | Divider line | Keep UI primitive |
+| `sheet.tsx` | KEEP | Slide-over drawer sheet | Keep UI primitive |
+| `sidebar.tsx` | KEEP | shadcn sidebar implementation | Keep UI primitive |
+| `skeleton.tsx` | KEEP | Loading skeleton | Keep UI primitive |
+| `slider.tsx` | KEEP | Range slider | Keep UI primitive |
+| `sonner.tsx` | KEEP | Sonner toaster | Keep feedback primitive |
+| `switch.tsx` | KEEP | Toggle switch | Keep UI primitive |
+| `table.tsx` | KEEP | Styled HTML table | Keep UI primitive |
+| `tabs.tsx` | KEEP | Tabbed interface | Keep UI primitive |
+| `textarea.tsx` | KEEP | Text area input | Keep UI primitive |
+| `toast.tsx` | KEEP | Toast component | Keep UI primitive |
+| `toaster.tsx` | KEEP | Toast container | Keep UI primitive |
+| `toggle-group.tsx` | KEEP | Toggle group buttons | Keep UI primitive |
+| `toggle.tsx` | KEEP | Toggle button | Keep UI primitive |
+| `tooltip.tsx` | KEEP | Hover tooltip | Keep UI primitive |
+| `use-toast.ts` | KEEP | Toast state management | Keep helper |
+| **Pages & Screens** | | | |
+| `src/pages/Dashboard/` | GENERALIZE | Dashboard with stat cards & activity | Transform into generic Dashboard with KPI cards, charts, activity feed, quick actions |
+| `src/pages/Login/` | GENERALIZE | Login screen | Modern generic Login page with RHF + Zod, password toggle, mock login |
+| `src/pages/Signup/` | GENERALIZE | Registration screen | Modern generic Register page with RHF + Zod |
+| `src/pages/ForgotPassword/` | GENERALIZE | Password recovery start | Modern generic Forgot Password page |
+| `src/pages/PasswordResetRequest/` | GENERALIZE | Password reset email form | Consolidate into clean Forgot/Reset password flow |
+| `src/pages/PasswordResetVerify/` | GENERALIZE | OTP reset confirmation | Generalize to neutral verification code flow |
+| `src/pages/PasswordResetConfirm/` | GENERALIZE | Set new password | Generalize to neutral Reset Password page |
+| `src/pages/Profile/` | GENERALIZE | User profile & password change | Generalize to generic Profile page (account, avatar, password) |
+| `src/pages/Settings/` | GENERALIZE | Application settings | Generalize to Settings page (account, appearance, notifications) |
+| `src/pages/Classes/` | GENERALIZE | Academic class list | Transform into generic DataTable CRUD list page (CRUD example) |
+| `src/pages/ClassDetails/` | GENERALIZE | Academic class details & students | Transform into generic Detail page (header, status badge, tabs, metadata, timeline) |
+| `src/pages/Storage/` | GENERALIZE | Storage breakdown & stats | Generalize into Reports/Analytics page (date range + charts + export) |
+| `src/pages/NotFound/` | GENERALIZE | 404 page | Modernize with consistent layout and back/home navigation |
+| `src/pages/Index/` | GENERALIZE | Landing page | Transform into clean, neutral template landing / entry page |
+| `src/pages/Files/` | DELETE | Domain file browser | Replace with generic CRUD table and file upload component |
+| `src/pages/Upload/` | DELETE | Domain upload form | Replace with generic `FileUpload` primitive |
+| `src/pages/Schedule/` | DELETE | Domain timetable & calendar | Extract calendar utilities; replace with generic components |
+| `src/pages/Friends/` | DELETE | Student buddy list | Delete domain networking page |
+| `src/pages/Marketplace/` | DELETE | Campus marketplace | Delete domain commerce page |
+| `src/pages/Library/` | DELETE | Student library resources | Delete domain library page |
+| `src/pages/Channel/` | DELETE | Broadcast channel | Delete domain channel page |
+| `src/pages/Trash/` | DELETE | Recycle bin file restore | Delete domain storage trash page |
+| `src/pages/About/` | DELETE | Kibegi marketing about | Delete domain content |
+| `src/pages/HowToUse/` | DELETE | Kibegi student tutorial | Delete domain content |
+| `src/pages/Privacy/` | DELETE | Kibegi privacy policy | Delete domain content |
+| `src/pages/Notifications/` | GENERALIZE | Notifications list | Generalize into generic Notifications center & NotificationBell |
+| **Services (`src/services/`)** | | | |
+| `authService.ts` | DELETE | Domain auth REST endpoints | Replace with generic mock auth service and typed interfaces |
+| `channelService.ts` | DELETE | Domain channel REST endpoints | Delete domain service |
+| `classService.ts` | DELETE | Domain class REST endpoints | Delete domain service |
+| `classmatesService.ts` | DELETE | Domain classmate REST endpoints | Delete domain service |
+| `fileService.ts` | DELETE | Domain file REST endpoints | Delete domain service |
+| `friendService.ts` | DELETE | Domain friend REST endpoints | Delete domain service |
+| `friendsService.ts` | DELETE | Domain friends REST endpoints | Delete domain service |
+| `libraryService.ts` | DELETE | Domain library REST endpoints | Delete domain service |
+| `marketplaceService.ts`| DELETE | Domain marketplace REST endpoints | Delete domain service |
+| `notificationService.ts`| DELETE | Domain notification REST endpoints | Replace with generic notification mock state |
+| `scheduleService.ts` | DELETE | Domain schedule REST endpoints | Delete domain service |
+| `searchService.ts` | DELETE | Domain search REST endpoints | Replace with generic client-side command palette filter |
+| `sharingService.ts` | DELETE | Domain file sharing endpoints | Delete domain service |
+| `storageService.ts` | DELETE | Domain storage quota endpoints | Delete domain service |
+| `uploadService.ts` | DELETE | Chunked file upload endpoints | Delete domain upload service |
+| **Assets & External Files** | | | |
+| `src/assets/hero-education.jpg` | DELETE | Domain stock photo | Delete domain asset |
+| `src/assets/hero-photo.jpeg` | DELETE | Domain stock photo | Delete domain asset |
+| `public/Kibegi Design System/` | DELETE | Static brand previews & mockups | Delete 25+ domain branding files |
+| `public/favicon/` & `public/*.png` | GENERALIZE | Domain logos & icons | Replace with clean, neutral SVG/favicon |
+| `deploy.sh`, `test-upload.sh` | DELETE | Netlify and upload shell scripts | Delete domain scripts |
+| `fix_dark_mode*.py` | DELETE | Python dark mode search/replace | Delete obsolete helper scripts |
+| `test-auth.html` | DELETE | Standalone HTML test | Delete ad-hoc test |
+| `NETLIFY_DEPLOYMENT.md` | DELETE | Netlify deployment documentation | Delete domain doc |
+| `UPLOAD_CONFIGURATION.md` | DELETE | Domain upload documentation | Delete domain doc |
+| `bun.lockb`, `pnpm-lock.yaml` | DELETE | Redundant lockfiles | Delete unused lockfiles; retain `package-lock.json` |
 
-The entry point mounts App; App nests query, theme, language, auth and tooltip providers around the router. Protected routes consult auth context. Page components call service modules, which use the Axios client and auth storage. State is mostly local React state and contexts; TanStack Query is configured, but use should be checked per page. Tailwind utilities and CSS variables in `src/index.css` implement styling, with additional design-system CSS under `public`.
+---
 
-## Routes in the original router
+## State and Data Flow Architecture
 
-The route definitions below were extracted from `src/App.tsx`; access is indicated by its `ProtectedRoute` wrapper.
+```
+User Action / Browser Event
+            │
+            ▼
+   React Router 6 (Data Router: createBrowserRouter)
+            │
+   ┌────────┴────────┐
+   ▼                 ▼
+AuthLayout      DashboardLayout (AppShell)
+(Public Pages)  ├── Collapsible Sidebar (driven by routes.config.ts)
+                ├── Topbar (Breadcrumbs, Search, ThemeToggle, UserMenu)
+                ├── Content Area (Suspense / PageLoader)
+                └── Footer
+                     │
+                     ▼
+           Feature / Page Components
+     (Dashboard, CRUD List, Detail, Reports, Settings)
+            │                  │
+            ▼                  ▼
+    TanStack React Query     Client Contexts & Stores
+   (useQuery / useMutation)   ├── AuthContext (User, Role, Session)
+            │                 ├── ThemeContext (Light/Dark/System)
+            ▼                 └── LanguageContext (i18n strings)
+    Generic API Client                │
+  (Axios with interceptors,           ▼
+   Base URL, Error handler)   localStorage / Cookie
+```
 
-| Path | Element | Access |
-| --- | --- | --- |
-| `/` | `Index` | Public |
-| `/login` | `Login` | Public |
-| `/signup` | `Signup` | Public |
-| `/forgot-password` | `ForgotPassword` | Public |
-| `/password-reset` | `PasswordResetRequest` | Public |
-| `/about` | `About` | Public |
-| `/how-to-use` | `HowToUse` | Public |
-| `/privacy` | `Privacy` | Public |
-| `/contact` | `Contact` | Public |
-| `/password-reset/verify` | `PasswordResetVerify` | Public |
-| `/password-reset/confirm` | `PasswordResetConfirm` | Public |
-| `/dashboard` | `Dashboard` | Protected |
-| `/upload` | `Upload` | Protected |
-| `/classes` | `Classes` | Protected |
-| `/classes/:id` | `ClassDetails` | Protected |
-| `/schedule` | `Schedule` | Protected |
-| `/schedule/calendar/:calendarId` | `Schedule` | Protected |
-| `/schedule/subscribe/:token` | `SchedulePublicSubscriptionPage` | Public |
-| `/schedule/code` | `ScheduleCodeEntryPage` | Public |
-| `/schedule/code/:code` | `SchedulePublicSubscriptionPage` | Public |
-| `/files` | `Files` | Protected |
-| `/friends` | `Friends` | Protected |
-| `/profile` | `Profile` | Protected |
-| `/profile/edit` | `ProfileEdit` | Protected |
-| `/profile/change-password` | `ProfileChangePassword` | Protected |
-| `/trash` | `Trash` | Protected |
-| `/sharing` | `Sharing` | Protected |
-| `/notifications` | `Notifications` | Protected |
-| `/settings` | `Settings` | Protected |
-| `/storage` | `Storage` | Protected |
-| `/marketplace` | `Marketplace` | Protected |
-| `/library` | `Library` | Protected |
-| `/channel` | `Channel` | Protected |
-| `/channel/register/:token` | `PublicRegister` | Public |
-| `*` | `NotFound` | Public |
-
-## Dead code and uncertainty
-
-There are multiple lockfiles, generated `dev-dist` files, helper scripts and a static design-system export. Their reachability and dependency use have not yet been established. No item is asserted dead solely because it is not imported by the entry point. The inventory below is a proposed disposition, not proof of unused code.
-
-## File classification
-
-Every source file is listed individually. KEEP means a reusable candidate requiring compatibility and accessibility checks; GENERALIZE means retain useful patterns while removing coupling; DELETE means domain-specific implementation or asset proposed for removal after extracting reusable behavior. Barrel files follow their page's disposition.
-
-| File | Classification | Rationale |
-| --- | --- | --- |
-| `src/App.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/assets/hero-education.jpg` | DELETE | Application-specific imagery. |
-| `src/assets/hero-photo.jpeg` | DELETE | Application-specific imagery. |
-| `src/components/FilePreview.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/NavLink.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/NavigationIndicator.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/ProtectedRoute.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/QrScanner.tsx` | DELETE | Domain-specific integration or form; extract general patterns first. |
-| `src/components/dashboard/DashboardHeader.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/layout/BottomNav.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/layout/DashboardNav.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/layout/InfoLayout.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/layout/Navbar.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/layout/Sidebar.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/components/library/ShareResourceForm.tsx` | DELETE | Domain-specific integration or form; extract general patterns first. |
-| `src/components/ui/accordion.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/alert-dialog.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/alert.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/aspect-ratio.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/avatar.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/badge.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/breadcrumb.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/button.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/calendar.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/card.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/carousel.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/chart.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/checkbox.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/collapsible.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/command.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/context-menu.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/dialog.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/drawer.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/dropdown-menu.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/form.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/hover-card.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/input-otp.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/input.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/label.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/menubar.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/navigation-menu.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/pagination.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/popover.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/progress.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/radio-group.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/resizable.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/scroll-area.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/select.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/separator.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/sheet.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/sidebar.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/skeleton.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/slider.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/sonner.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/switch.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/table.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/tabs.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/textarea.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/toast.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/toaster.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/toggle-group.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/toggle.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/tooltip.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/components/ui/use-toast.ts` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/contexts/AuthContext.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/contexts/LanguageContext.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/contexts/ThemeContext.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/hooks/use-mobile.tsx` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/hooks/use-toast.ts` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/hooks/usePageTitle.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/index.css` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/api.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/authStorage.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/ics.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/media.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/translations.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/lib/utils.ts` | KEEP | Reusable UI primitive or general helper; verify compatibility. |
-| `src/main.tsx` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `src/pages/About/About.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/About/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Channel/PublicRegister.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Channel/index.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ClassDetails/ClassDetails.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ClassDetails/Contact/Contact.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ClassDetails/Contact/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ClassDetails/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Classes/Classes.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Classes/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Dashboard/Dashboard.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Dashboard/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Files/Files.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Files/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ForgotPassword/ForgotPassword.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/ForgotPassword/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Friends/Friends.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Friends/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/HowToUse/HowToUse.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/HowToUse/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Index/Index.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Index/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Library/index.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Login/Login.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Login/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Marketplace/Marketplace.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Marketplace/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/NotFound/NotFound.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/NotFound/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Notifications/Notifications.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Notifications/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetConfirm/PasswordResetConfirm.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetConfirm/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetRequest/PasswordResetRequest.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetRequest/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetVerify/PasswordResetVerify.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/PasswordResetVerify/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Privacy/Privacy.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Privacy/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Profile/Profile.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Profile/ProfileChangePassword.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Profile/ProfileEdit.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Profile/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Schedule/Schedule.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Schedule/components.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Schedule/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Schedule/schedule-utils.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Settings/Settings.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Settings/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Sharing/Sharing.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Sharing/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Signup/Signup.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Signup/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Storage/Storage.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Storage/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Trash/Trash.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Trash/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Upload/Upload.tsx` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/pages/Upload/index.ts` | GENERALIZE | Screen or helper contains application-specific behavior; extract reusable layout and patterns. |
-| `src/services/authService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/channelService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/classService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/classmatesService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/fileService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/friendService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/friendsService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/libraryService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/marketplaceService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/notificationService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/scheduleService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/searchService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/sharingService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/storageService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/services/uploadService.ts` | DELETE | Application-specific endpoint and data contracts; extract generic client patterns first. |
-| `src/vite-env.d.ts` | GENERALIZE | Useful infrastructure or UI coupled to current app; review and decouple. |
-| `public/Kibegi Design System/.thumbnail` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/README.md` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/SKILL.md` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/assets/hero-education.jpg` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/assets/hero-students.jpeg` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/assets/kibegi-logo-192.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/assets/kibegi-logo.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/colors_and_type.css` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/brand-iconography.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/brand-imagery.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/brand-logo.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/color-gradients.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/color-neutrals.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/color-primary.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/color-secondary-accent.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/color-semantic.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-avatars.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-badges.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-buttons.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-card.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-icon-chips.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/component-inputs.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/spacing-radii.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/spacing-scale.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/spacing-shadows.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/type-body.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/type-display.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/type-eyebrow.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/preview/type-scale.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/README.md` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/app-shell.jsx` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/index.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/kit.css` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/screens.jsx` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/app/screens2.jsx` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/README.md` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/components.jsx` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/copy.jsx` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/index-classic.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/index.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/kit.css` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/ui_kits/marketing/premium.css` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/uploads/pasted-1780213930813-0.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/uploads/pasted-1780213945641-0.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/uploads/pasted-1780213963689-0.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/Kibegi Design System/uploads/pasted-1780213980085-0.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/_redirects` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/apple-touch-icon.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/apple-touch-icon.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/favicon-96x96.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/favicon.ico` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/favicon.svg` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/site.webmanifest` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/web-app-manifest-192x192.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon/web-app-manifest-512x512.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon-96x96.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon.ico` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/favicon.svg` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/placeholder.svg` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/robots.txt` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/site.webmanifest` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/sitemap.xml` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/test-storage.html` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/web-app-manifest-192x192.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-| `public/web-app-manifest-512x512.png` | DELETE | Existing brand, static export, deployment artifact or application-specific asset; review before removal. |
-
-## Baseline validation
-
-- `npm install`: completed; npm reported 37 vulnerabilities and deprecated dependencies.
-- `npm run dev`: started and returned HTTP 200 at the local root; Vite emitted browser-data and Tailwind warnings.
-- `npm run build`: completed with outdated browser-data, invalid Tailwind utility, mixed dynamic/static import and large bundle warnings.
-- `npm run lint`: failed with 198 errors and 30 warnings, including numerous explicit-any errors. The initial parallel run also encountered a transient Vite config file race; the reported count is from a subsequent standalone run.
-- No automated test script is configured.
-
-This audit is incomplete: individual file behavior, full vocabulary, dependency reachability, secrets, and actual dead code must be reviewed before the classification is executed.
-
-A subsequent partial lint cleanup ignores generated `dev-dist` output and resolves two redundant interfaces, a constant declaration and a Tailwind import. A fresh install, development-server HTTP check and production build succeeded; lint still reports 174 errors and 22 warnings. This does not satisfy the phase gate.
-
-A direct TypeScript check also fails before checking the source because `ignoreDeprecations: "6.0"` is not recognized by the installed TypeScript 5.8 compiler. Overriding that setting reveals existing source errors, including missing translation keys and unresolved names. Vite's successful build transpiles without performing this check.
-
-The existing API interceptor logged request headers and request/response bodies in development, and the authentication service logged authentication responses. Initial logging cleanup removes those exposures, but the rest of the application has not yet received a complete sensitive-data logging or credential audit.
+## Dead Code & Dependencies to Prune
+1. `html5-qrcode` & `qrcode.react`: Domain-specific camera/QR scanner dependencies.
+2. `lovable-tagger`: Development-time DOM tagging tool from previous builder.
+3. `vite-plugin-pwa` & `workbox-window`: Overly complex service worker configuration for an app template; can be removed or kept minimal.
+4. Ad-hoc scripts (`fix_dark_mode.py`, `deploy.sh`, `test-upload.sh`).
+5. Redundant lockfiles (`bun.lockb`, `pnpm-lock.yaml`).
+6. All 14 domain service files in `src/services/`.
