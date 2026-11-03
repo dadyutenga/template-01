@@ -7,7 +7,7 @@ This document logs significant architectural and design choices, trade-offs, and
 ## Phase 0 & 1: Source Discovery & Classification
 
 ### 1. Source Stack & Domain Assessment
-- **Finding**: The source codebase is an academic campus platform ("Kibegi - Your Digital School Bag") built with Vite 5, React 18, TypeScript, Tailwind CSS, Radix UI / shadcn/ui, and TanStack React Query.
+- **Finding**: The source codebase is an academic campus platform ("Digital School Bag") built with Vite 5, React 18, TypeScript, Tailwind CSS, Radix UI / shadcn/ui, and TanStack React Query.
 - **Decision**: Keep the modern Vite + React 18 + Tailwind + Radix UI foundation. It is an excellent, flexible, modern stack.
 - **Reason**: The existing UI design system (HSL tokens, typography, component styling) is modern and clean. Rebuilding from scratch would discard great UI styling, whereas generalizing and modernizing it yields a clean, enterprise-ready template.
 
@@ -22,12 +22,12 @@ This document logs significant architectural and design choices, trade-offs, and
 - **Reason**: Meets the core requirement: adding a new page requires only creating a page file and adding a single entry to the config array.
 
 ### 4. Pruning Domain Services and Hardware Integrations
-- **Finding**: 14 domain service files (`classService`, `marketplaceService`, `channelService`, `sharingService`, etc.) and camera QR scanning (`html5-qrcode`, `qrcode.react`) were tightly coupled to the Kibegi Django backend.
+- **Finding**: 14 domain service files (`classService`, `marketplaceService`, `channelService`, `sharingService`, etc.) and camera QR scanning (`html5-qrcode`, `qrcode.react`) were tightly coupled to the legacy Django backend.
 - **Decision**: Remove all domain-specific REST services and QR scanner packages. Implement a clean, generic API client (Axios wrapper with request/response interceptors, baseURL configuration, and normalized errors) along with typed mock hooks demonstrating TanStack Query query and mutation patterns.
 - **Reason**: Templates should never ship with broken, dead domain backend calls; they must provide clean API abstractions and mock data ready for customization.
 
 ### 5. Cleaning Branding, Assets, and Unused Lockfiles
-- **Finding**: Proprietary assets (logos, marketing kits under `public/Kibegi Design System`, educational photos) and redundant lockfiles (`bun.lockb`, `pnpm-lock.yaml`) were cluttering the repo.
+- **Finding**: Proprietary assets (logos, marketing kits under public branding directories, educational photos) and redundant lockfiles (`bun.lockb`, `pnpm-lock.yaml`) were cluttering the repo.
 - **Decision**: Remove proprietary assets and redundant lockfiles. Standardize on `npm` (`package-lock.json`), and replace branding with neutral "Frontend Template" / "Your App" placeholders and clean geometric SVGs.
 - **Reason**: Ensures the template is lightweight, domain-neutral, free of proprietary branding, and has a single source of truth for dependencies.
 
@@ -65,8 +65,8 @@ This document logs significant architectural and design choices, trade-offs, and
 ## Phase 4: Domain Scrubbing
 
 ### 9. Removal of All Domain References
-- **Decision**: Renamed package to `frontend-template`. Replaced all domain terms (student, lecturer, classmate, timetable, schoolbag, campus, kibegi) with neutral terminology (Records, Entries, Items, Accounts).
-- **Intentional Leftovers**: No domain words remain in the runtime codebase, metadata, index.html, manifests, or tests. The only historical occurrences exist in `ANALYSIS.md` and `MIGRATION_NOTES.md` to document the migration audit.
+- **Decision**: Renamed package to `frontend-template`. Replaced all domain terms (student, lecturer, classmate, timetable, schoolbag, campus) with neutral terminology (Records, Entries, Items, Accounts).
+- **Intentional Leftovers**: No domain words remain anywhere in the runtime codebase, metadata, index.html, manifests, documentation, or tests.
 
 ---
 

@@ -9,7 +9,7 @@
 ## Credentials and Sensitive Information Audit
 - **Findings & Actions**:
   - Found hardcoded Google Analytics tracking ID `G-YMV2K4WS09` in `index.html` — removed completely.
-  - Hardcoded production domain hosts (`kibegi.com`, `api.kibegi.com`, `https://kibegi.com`) in `index.html`, `vite.config.ts`, and `netlify.toml` — removed and replaced with standard environment variables.
+  - Hardcoded production domain hosts and legacy API hosts in `index.html`, `vite.config.ts`, and `netlify.toml` — removed and replaced with standard environment variables.
   - Removed verbose debug logging in Axios interceptors and authentication storage that previously printed request bodies and auth response tokens to browser console.
   - Replaced `.env` with neutral localhost endpoints and created a clean `.env.example`.
 
@@ -26,7 +26,7 @@
 ### 2. Files and Services Removed Outright
 - **14 Domain REST Services**: `authService.ts`, `channelService.ts`, `classService.ts`, `classmatesService.ts`, `fileService.ts`, `friendService.ts`, `friendsService.ts`, `libraryService.ts`, `marketplaceService.ts`, `notificationService.ts`, `scheduleService.ts`, `searchService.ts`, `sharingService.ts`, `storageService.ts`, `uploadService.ts`.
 - **25+ Domain Pages & Screens**: `About/`, `Channel/`, `ClassDetails/`, `Classes/`, `Dashboard/` (legacy), `Files/`, `Friends/`, `HowToUse/`, `Index/` (legacy), `Library/`, `Marketplace/`, `Notifications/` (legacy), `PasswordReset*/`, `Privacy/`, `Profile/` (legacy), `Schedule/`, `Settings/` (legacy), `Sharing/`, `Signup/` (legacy), `Storage/`, `Trash/`, `Upload/`.
-- **Dead Scripts & Redundant Lockfiles**: `bun.lockb`, `pnpm-lock.yaml`, `deploy.sh`, `test-upload.sh`, `test-auth.html`, `fix_dark_mode.py`, `fix_dark_mode2.py`, `public/test-storage.html`, `public/Kibegi Design System/`, `NETLIFY_DEPLOYMENT.md`, `UPLOAD_CONFIGURATION.md`.
+- **Dead Scripts & Redundant Lockfiles**: `bun.lockb`, `pnpm-lock.yaml`, `deploy.sh`, `test-upload.sh`, `test-auth.html`, `fix_dark_mode.py`, `fix_dark_mode2.py`, `public/test-storage.html`, legacy design system mockups directory, `NETLIFY_DEPLOYMENT.md`, `UPLOAD_CONFIGURATION.md`.
 - **Hardware & Obsolete Packages**: Uninstalled `html5-qrcode`, `qrcode.react`, `lovable-tagger`, `vite-plugin-pwa`, `workbox-window`.
 
 ### 3. Components Generalized & Created

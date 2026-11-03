@@ -34,9 +34,9 @@
 
 ### Business Domain & Domain Vocabulary List
 - **Business Domain**: Academic and student campus file-sharing, timetable scheduling, peer networking (friends/classmates), campus community channels, and student marketplace platform.
-- **Original Brand**: "Kibegi" / "Kibegi - Your Digital School Bag".
+- **Original Brand**: "Digital School Bag" (campus file-sharing platform).
 - **Domain Vocabulary List** (to be completely scrubbed or generalized in Phase 4):
-  - **Brand & Platform**: `kibegi`, `kibegi-ui`, `Digital School Bag`, `kibegi.com`, `api.kibegi.com`.
+  - **Brand & Platform**: `schoolbag`, `digital school bag`, domain hosts, and domain URLs.
   - **Academic / School**: `school`, `university`, `college`, `student`, `lecturer`, `teacher`, `professor`, `class`, `classes`, `classmate`, `classmates`, `course`, `subject`, `study`, `study materials`, `examination`, `exam`, `timetable`, `semester`, `term`.
   - **Files & Storage**: `upload`, `uploader`, `chunked upload`, `files`, `my files`, `folder`, `sharing`, `shared with me`, `public share`, `storage`, `quota`, `trash`, `recycle bin`, `resource`, `share resource`.
   - **Social & Community**: `friend`, `friends`, `buddy`, `network`, `channel`, `public register`, `broadcast`.
@@ -161,9 +161,9 @@
 | `src/pages/Library/` | DELETE | Student library resources | Delete domain library page |
 | `src/pages/Channel/` | DELETE | Broadcast channel | Delete domain channel page |
 | `src/pages/Trash/` | DELETE | Recycle bin file restore | Delete domain storage trash page |
-| `src/pages/About/` | DELETE | Kibegi marketing about | Delete domain content |
-| `src/pages/HowToUse/` | DELETE | Kibegi student tutorial | Delete domain content |
-| `src/pages/Privacy/` | DELETE | Kibegi privacy policy | Delete domain content |
+| `src/pages/About/` | DELETE | Legacy marketing about page | Delete domain content |
+| `src/pages/HowToUse/` | DELETE | Legacy student tutorial page | Delete domain content |
+| `src/pages/Privacy/` | DELETE | Legacy privacy policy page | Delete domain content |
 | `src/pages/Notifications/` | GENERALIZE | Notifications list | Generalize into generic Notifications center & NotificationBell |
 | **Services (`src/services/`)** | | | |
 | `authService.ts` | DELETE | Domain auth REST endpoints | Replace with generic mock auth service and typed interfaces |
@@ -184,7 +184,7 @@
 | **Assets & External Files** | | | |
 | `src/assets/hero-education.jpg` | DELETE | Domain stock photo | Delete domain asset |
 | `src/assets/hero-photo.jpeg` | DELETE | Domain stock photo | Delete domain asset |
-| `public/Kibegi Design System/` | DELETE | Static brand previews & mockups | Delete 25+ domain branding files |
+| `public/Legacy Design System/` | DELETE | Static brand previews & mockups | Delete 25+ domain branding files |
 | `public/favicon/` & `public/*.png` | GENERALIZE | Domain logos & icons | Replace with clean, neutral SVG/favicon |
 | `deploy.sh`, `test-upload.sh` | DELETE | Netlify and upload shell scripts | Delete domain scripts |
 | `fix_dark_mode*.py` | DELETE | Python dark mode search/replace | Delete obsolete helper scripts |
