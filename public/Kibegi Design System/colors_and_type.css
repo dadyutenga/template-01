@@ -1,0 +1,174 @@
+/* ============================================================
+   KIBEGI — Colors & Type
+   "Your Digital School Bag"  ·  Powered by camelTech
+   Source of truth: kibegi-UI (src/index.css, tailwind.config.ts)
+   All brand colors are authored in HSL, mirroring the codebase.
+   ============================================================ */
+
+/* ----- Webfonts -----------------------------------------------------------
+   Kibegi loads Outfit (body/UI), Poppins (display/headings) and Inter
+   (fallback) from Google Fonts. Mirror that import in any standalone file:
+
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+--------------------------------------------------------------------------- */
+
+:root {
+  /* ---------- BRAND COLOR TOKENS (HSL triplets, as in codebase) ---------- */
+  --hsl-primary:        187 85% 43%;   /* Kibegi teal — the brand anchor   */
+  --hsl-primary-strong: 187 85% 35%;   /* darker teal for pressed/active   */
+  --hsl-primary-soft:   187 85% 55%;   /* lighter teal (gradient stop)     */
+  --hsl-secondary:      25 95% 65%;    /* warm orange — backpack accent    */
+  --hsl-accent:         142 70% 55%;   /* fresh green — success / positive */
+  --hsl-destructive:    0 72% 51%;     /* red — danger / destructive       */
+
+  --hsl-background:     210 40% 98%;   /* cool off-white canvas            */
+  --hsl-foreground:     215 25% 15%;   /* dark slate ink                   */
+  --hsl-card:           0 0% 100%;     /* pure white card surface          */
+  --hsl-muted:          210 40% 96%;   /* subtle fill                      */
+  --hsl-muted-foreground: 215 15% 50%; /* secondary text                   */
+  --hsl-border:         215 25% 88%;   /* hairline borders & inputs        */
+
+  /* ---------- RESOLVED COLORS (use these in plain CSS) ---------- */
+  --primary:            hsl(var(--hsl-primary));        /* #11b6c9-ish teal */
+  --primary-strong:     hsl(var(--hsl-primary-strong));
+  --primary-soft:       hsl(var(--hsl-primary-soft));
+  --primary-foreground: #ffffff;
+  --secondary:          hsl(var(--hsl-secondary));      /* #f8a55a orange   */
+  --secondary-foreground: hsl(var(--hsl-foreground));
+  --accent:             hsl(var(--hsl-accent));         /* #44cf7f green    */
+  --accent-foreground:  #ffffff;
+  --destructive:        hsl(var(--hsl-destructive));    /* #dc3030 red      */
+  --destructive-foreground: #ffffff;
+
+  --bg:        hsl(var(--hsl-background));
+  --fg1:       hsl(var(--hsl-foreground));               /* primary ink     */
+  --fg2:       hsl(var(--hsl-muted-foreground));         /* secondary ink   */
+  --fg3:       hsl(215 15% 62%);                         /* tertiary / meta */
+  --card:      hsl(var(--hsl-card));
+  --muted:     hsl(var(--hsl-muted));
+  --border:    hsl(var(--hsl-border));
+  --ring:      hsl(var(--hsl-primary));
+
+  /* Soft tints used everywhere for icon chips & badges */
+  --primary-tint:   hsl(187 85% 43% / 0.10);
+  --primary-tint-2: hsl(187 85% 43% / 0.05);
+  --accent-tint:    hsl(142 70% 55% / 0.10);
+  --secondary-tint: hsl(25 95% 65% / 0.12);
+
+  /* ---------- GRADIENTS ---------- */
+  --gradient-primary: linear-gradient(135deg, hsl(187 85% 43%) 0%, hsl(187 85% 55%) 100%);
+  --gradient-hero:    linear-gradient(135deg, hsl(187 85% 43%) 0%, hsl(187 85% 55%) 50%, hsl(25 95% 65%) 100%);
+  --gradient-card:    linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 99%) 100%);
+  /* Hero page wash — radial teal glow over a soft slate gradient */
+  --bg-wash: radial-gradient(circle at top, rgba(34,197,194,0.12), transparent 28%),
+             linear-gradient(180deg, rgba(248,250,252,0.98), rgba(241,245,249,0.72));
+
+  /* ---------- SHADOWS (slate-tinted, never pure black) ---------- */
+  --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.1), 0 2px 4px -1px hsl(215 25% 15% / 0.06);
+  --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1), 0 4px 6px -2px hsl(215 25% 15% / 0.05);
+  --shadow-xl: 0 20px 25px -5px hsl(215 25% 15% / 0.1), 0 10px 10px -5px hsl(215 25% 15% / 0.04);
+  /* Signature "floating card" shadow seen on hero imagery & CTA panels */
+  --shadow-float: 0 30px 80px -35px rgba(15,23,42,0.35);
+
+  /* ---------- RADII ---------- */
+  --radius: 0.75rem;          /* shadcn base (lg) = 12px                    */
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-pill: 9999px;      /* badges, chips, avatars                     */
+  /* Oversized "soft" radii are a Kibegi signature on big surface cards.    */
+  --radius-card: 26px;
+  --radius-card-lg: 30px;
+  --radius-hero: 34px;
+
+  /* ---------- TRANSITIONS ---------- */
+  --transition-base:   all 0.2s ease;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- TYPE FAMILIES ---------- */
+  --font-sans:    'Outfit', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Poppins', 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-body:    var(--font-sans);
+
+  /* ---------- TYPE SCALE (rem, mobile-first; nudged up for readability) -- */
+  --text-xs:   0.85rem;   /* 13.6px  line 1.25rem */
+  --text-sm:   0.95rem;   /* 15.2px  line 1.5rem  */
+  --text-base: 1rem;      /* 16px    line 1.65rem */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+  --text-6xl:  3.75rem;   /* 60px — hero display */
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-black: 900;    /* hero headlines use font-black */
+
+  --tracking-tight: -0.02em;   /* headings */
+  --tracking-eyebrow: 0.2em;   /* uppercase eyebrow labels */
+}
+
+/* ============================================================
+   SEMANTIC TYPE STYLES — apply directly or copy into components
+   ============================================================ */
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg1);
+  font-size: 15px;              /* base body bumps to 16px ≥640px           */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@media (min-width: 640px) { body { font-size: 16px; } }
+
+/* Headings → Poppins, semibold+, tight tracking */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+  margin: 0;
+}
+
+/* Hero display — the landing/dashboard headline treatment */
+.display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: var(--text-4xl);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-tight);
+}
+@media (min-width: 768px) { .display { font-size: var(--text-6xl); } }
+
+.h1 { font-size: var(--text-3xl); font-weight: var(--weight-black); }
+@media (min-width: 768px) { .h1 { font-size: var(--text-5xl); } }
+.h2 { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
+@media (min-width: 768px) { .h2 { font-size: var(--text-3xl); } }
+.h3 { font-size: var(--text-xl); font-weight: var(--weight-semibold); }
+
+/* Body copy */
+.p        { font-size: var(--text-base); line-height: 1.7; color: var(--fg2); }
+.p-lead   { font-size: var(--text-lg);  line-height: 1.7; color: var(--fg2); }
+.small    { font-size: var(--text-sm);  color: var(--fg2); }
+.meta     { font-size: var(--text-xs);  color: var(--fg3); }
+
+/* Eyebrow — uppercase tracked label in primary teal, sits above headings */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--primary);
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }

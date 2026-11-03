@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html,body{margin:0;background:#fff;}
+  .card{padding:24px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .btn{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 22px;border-radius:12px;font-size:15px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:var(--transition-base);}
+  .btn svg{width:16px;height:16px;}
+  .hero{background:var(--gradient-primary);color:#fff;box-shadow:var(--shadow-lg);}
+  .default{background:var(--primary);color:#fff;box-shadow:var(--shadow-md);}
+  .outline{background:transparent;color:var(--primary);border:2px solid var(--primary);}
+  .secondary{background:var(--secondary);color:hsl(215 25% 15%);box-shadow:var(--shadow-md);}
+  .ghost{background:transparent;color:var(--fg1);}
+  .destructive{background:var(--destructive);color:#fff;box-shadow:var(--shadow-md);}
+  .lbl{font-size:11px;color:var(--fg3);margin:18px 0 9px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">Buttons</div>
+  <div class="row" style="margin-top:14px;">
+    <button class="btn hero">Start Organizing <i data-lucide="arrow-right"></i></button>
+    <button class="btn default">Open</button>
+    <button class="btn outline">See How It Works</button>
+    <button class="btn secondary">Join Class</button>
+  </div>
+  <div class="lbl">Ghost · Destructive · sizes</div>
+  <div class="row">
+    <button class="btn ghost">View All <i data-lucide="arrow-right"></i></button>
+    <button class="btn destructive"><i data-lucide="trash-2"></i> Delete</button>
+    <button class="btn outline" style="height:36px;padding:0 14px;font-size:13.5px;">sm</button>
+    <button class="btn default" style="width:44px;padding:0;justify-content:center;"><i data-lucide="bell"></i></button>
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

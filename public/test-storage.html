@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Kibegi Auth Storage Debug</h2>
+    <button onclick="checkStorage()">🔍 Check Storage</button>
+    <button onclick="testStorage()">✅ Test Storage</button>
+    <button onclick="clearStorage()">🗑️ Clear Storage</button>
+    <pre id="output">Click "Check Storage" to see current values...</pre>
+
+    <script>
+        function checkStorage() {
+            const output = document.getElementById('output');
+            const data = {
+                localStorage: {
+                    access_token: localStorage.getItem('access_token'),
+                    refresh_token: localStorage.getItem('refresh_token'),
+                    user: localStorage.getItem('user')
+                },
+                cookies: {
+                    all: document.cookie,
+                    access_token: getCookie('access_token'),
+                    user: getCookie('user')
+                },
+                location: window.location.href
+            };
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function testStorage() {
+            localStorage.setItem('test_token', 'test123');
+            localStorage.setItem('test_user', JSON.stringify({email: 'test@example.com'}));
+            alert('Test data stored! Click "Check Storage" to verify.');
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            alert('Storage cleared!');
+            checkStorage();
+        }
+
+        // Auto-check on load
+        setTimeout(checkStorage, 100);
+    </script>
+</body>
+</html>

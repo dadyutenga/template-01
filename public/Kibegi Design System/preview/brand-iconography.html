@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  html,body{margin:0;background:#fff;}
+  .card{padding:24px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .grid{display:grid;grid-template-columns:repeat(10,1fr);gap:16px;margin-top:16px;color:var(--fg1);}
+  .grid svg{width:26px;height:26px;stroke-width:2;justify-self:center;}
+  .note{font-size:12px;color:var(--fg3);margin-top:18px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow">Iconography · Lucide (outline, 2px)</div>
+  <div class="grid">
+    <i data-lucide="folder-open"></i><i data-lucide="file-text"></i><i data-lucide="cloud-upload"></i><i data-lucide="upload"></i><i data-lucide="share-2"></i><i data-lucide="users"></i><i data-lucide="graduation-cap"></i><i data-lucide="calendar-days"></i><i data-lucide="clock-3"></i><i data-lucide="shield-check"></i>
+    <i data-lucide="lock"></i><i data-lucide="globe"></i><i data-lucide="bell"></i><i data-lucide="search"></i><i data-lucide="settings"></i><i data-lucide="log-out"></i><i data-lucide="menu"></i><i data-lucide="arrow-right"></i><i data-lucide="check-circle-2"></i><i data-lucide="sparkles"></i>
+  </div>
+  <div class="note">Single library, used product-wide. Sizes 16 / 20 / 28px. Emoji limited to language flags 🇹🇿 🇺🇸 and 👋 in the dashboard greeting.</div>
+</div>
+<script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#fff;}
+  .card{padding:24px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .sw{display:flex;gap:14px;}
+  .chip{flex:1;border-radius:16px;height:90px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;justify-content:flex-end;padding:12px;box-sizing:border-box;color:#fff;}
+  .name{font-size:12.5px;font-weight:700;}
+  .hex{font-size:10.5px;opacity:.9;margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow" style="margin-bottom:16px;">Gradients</div>
+  <div class="sw">
+    <div class="chip" style="background:var(--gradient-primary);"><span class="name">Primary</span><span class="hex">teal → light teal</span></div>
+    <div class="chip" style="background:var(--gradient-hero);"><span class="name">Hero</span><span class="hex">teal → teal → orange</span></div>
+    <div class="chip" style="background:var(--gradient-card);color:hsl(215 25% 30%);border:1px solid var(--border);box-shadow:var(--shadow-sm);"><span class="name">Card</span><span class="hex">white → faint slate</span></div>
+  </div>
+</div>
+</body>
+</html>

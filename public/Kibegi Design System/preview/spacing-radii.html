@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#fff;}
+  .card{padding:24px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .row{display:flex;gap:16px;align-items:flex-end;}
+  .item{text-align:center;}
+  .box{width:88px;height:64px;background:var(--primary-tint);border:1.5px solid var(--primary);}
+  .lbl{font-size:11px;color:var(--fg2);margin-top:8px;font-weight:600;}
+  .sub{font-size:10px;color:var(--fg3);}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow" style="margin-bottom:16px;">Corner radii</div>
+  <div class="row">
+    <div class="item"><div class="box" style="border-radius:6px;"></div><div class="lbl">sm · 8px</div><div class="sub">chips</div></div>
+    <div class="item"><div class="box" style="border-radius:12px;"></div><div class="lbl">lg · 12px</div><div class="sub">buttons, inputs</div></div>
+    <div class="item"><div class="box" style="border-radius:26px;"></div><div class="lbl">card · 26px</div><div class="sub">stat cards</div></div>
+    <div class="item"><div class="box" style="border-radius:30px;"></div><div class="lbl">card-lg · 30px</div><div class="sub">surfaces</div></div>
+    <div class="item"><div class="box" style="border-radius:9999px;"></div><div class="lbl">pill</div><div class="sub">badges</div></div>
+  </div>
+</div>
+</body>
+</html>

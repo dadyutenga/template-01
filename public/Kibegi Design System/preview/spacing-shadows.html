@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<style>
+  html,body{margin:0;background:var(--bg);}
+  .card{padding:28px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .row{display:flex;gap:22px;align-items:center;}
+  .item{text-align:center;}
+  .box{width:96px;height:64px;background:#fff;border-radius:16px;}
+  .lbl{font-size:11px;color:var(--fg2);margin-top:12px;font-weight:600;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow" style="margin-bottom:20px;">Shadow / elevation ramp</div>
+  <div class="row">
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-sm);"></div><div class="lbl">sm</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-md);"></div><div class="lbl">md</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-lg);"></div><div class="lbl">lg</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-xl);"></div><div class="lbl">xl</div></div>
+    <div class="item"><div class="box" style="box-shadow:var(--shadow-float);"></div><div class="lbl">float</div></div>
+  </div>
+</div>
+</body>
+</html>

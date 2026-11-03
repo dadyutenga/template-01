@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="../colors_and_type.css" rel="stylesheet">
+<style>
+  html,body{margin:0;background:#fff;}
+  .card{padding:24px 30px;box-sizing:border-box;font-family:var(--font-sans);}
+  .sw{display:flex;gap:14px;}
+  .chip{flex:1;border-radius:14px;height:84px;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;box-sizing:border-box;box-shadow:var(--shadow-sm);}
+  .name{font-size:12.5px;font-weight:700;}
+  .hex{font-size:11px;opacity:.85;margin-top:2px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="eyebrow" style="margin-bottom:16px;">Secondary &amp; Accent</div>
+  <div class="sw">
+    <div class="chip" style="background:hsl(25 95% 65%);color:hsl(215 25% 15%);"><span class="name">Secondary · Orange</span><span class="hex">25 95% 65%</span></div>
+    <div class="chip" style="background:hsl(25 95% 65% / .12);color:hsl(25 60% 35%);"><span class="name">Orange tint</span><span class="hex">warm glow</span></div>
+    <div class="chip" style="background:hsl(142 70% 55%);color:#fff;"><span class="name">Accent · Green</span><span class="hex">142 70% 55%</span></div>
+    <div class="chip" style="background:hsl(142 70% 55% / .12);color:hsl(142 50% 30%);"><span class="name">Green tint</span><span class="hex">success / shared</span></div>
+  </div>
+</div>
+</body>
+</html>
